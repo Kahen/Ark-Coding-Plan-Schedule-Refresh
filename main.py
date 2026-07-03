@@ -14,12 +14,23 @@ from datetime import datetime
 from pytz import timezone
 
 
-def get_env(name):
-    """Get a required environment variable, exit if missing."""
+def get_env(name, default=None, required=False):
+    """Get an environment variable.
+
+    - If the variable is set, return its value.
+    - If it is not set and a default is provided, return the default.
+    - If it is not set, no default is provided, and it is required, exit with an error.
+    """
     value = os.environ.get(name)
     if not value:
-        print(f"ERROR: Missing required environment variable: {name}")
-        sys.exit(1)
+        if default is not None:
+            print(f"INFO: {name} not set, using default: {default}")
+            return default
+        if required:
+            print(f"ERROR: Missing required environment variable: {name}")
+            sys.exit(1)
+        print(f"INFO: {name} not set, this feature will be disabled.")
+        return None
     return value
 
 
@@ -111,9 +122,15 @@ def main():
     print("=== Automated API Request & Snapshot ===")
 
     # Load configuration from environment (populated from GitHub Secrets)
-    base_url = get_env("BASE_URL")
-    api_key = get_env("ARK_API_KEY")
-    model = get_env("MODEL")
+    # ARK_API_KEY is the only required variable. BASE_URL and MODEL fall back to
+    # the defaults below when omitted. Telegram is completely optional — if
+    # TG_TOKEN / TG_CHAT_ID are not set, notifications are skipped.
+    base_url = get_env(
+        "BASE_URL",
+        default="https://ark.cn-beijing.volces.com/api/coding/v1/messages",
+    )
+    api_key = get_env("ARK_API_KEY", required=True)
+    model = get_env("MODEL", default="ark-code-latest")
     tg_token = get_env("TG_TOKEN")
     tg_chat_id = get_env("TG_CHAT_ID")
 
@@ -138,17 +155,20 @@ def main():
         print(f"ERROR: Failed to save snapshot: {e}")
         snapshot_path = "N/A"
 
-    # Send Telegram notification
-    now_bj = datetime.now(timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
-    status_emoji = "✅" if success else "❌"
-    message = (
-        f"{status_emoji} <b>API Snapshot Report</b>\n\n"
-        f"<b>Model:</b> {model}\n"
-        f"<b>Status:</b> {'SUCCESS' if success else 'FAILED'}\n"
-        f"<b>Time (BJT):</b> {now_bj}\n\n"
-        f"<b>Reply:</b>\n{reply_text[:3000]}"
-    )
-    send_telegram(tg_token, tg_chat_id, message)
+    # Send Telegram notification (only when both TG_TOKEN and TG_CHAT_ID are set)
+    if tg_token and tg_chat_id:
+        now_bj = datetime.now(timezone("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+        status_emoji = "✅" if success else "❌"
+        message = (
+            f"{status_emoji} <b>API Snapshot Report</b>\n\n"
+            f"<b>Model:</b> {model}\n"
+            f"<b>Status:</b> {'SUCCESS' if success else 'FAILED'}\n"
+            f"<b>Time (BJT):</b> {now_bj}\n\n"
+            f"<b>Reply:</b>\n{reply_text[:3000]}"
+        )
+        send_telegram(tg_token, tg_chat_id, message)
+    else:
+        print("INFO: TG_TOKEN / TG_CHAT_ID not set, skipping Telegram notification.")
 
     # Exit with non-zero code if the API call failed, so the workflow run is marked failed
     if not success:
