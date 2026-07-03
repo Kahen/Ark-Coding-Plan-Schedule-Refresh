@@ -1,11 +1,11 @@
 name: Auto API Request & Snapshot
 
 on:
+  workflow_dispatch: # manual trigger
   schedule:
-    # Beijing Time (UTC+8) -> UTC
-    - cron: "0 22 * * *"   # 06:00 BJT
-    - cron: "1 3 * * *"    # 11:01 BJT
-    - cron: "2 8 * * *"    # 16:02 BJT
+    # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events
+    # Runs every 2 hours
+    - cron:  '*/5 * * * *'
 jobs:
   api-request:
     runs-on: ubuntu-latest
