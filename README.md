@@ -38,11 +38,13 @@ git push
 ### 3. 验证
 
 - 进入 **Actions → Auto API Request & Snapshot → Run workflow** 手动触发一次。
-- 成功后，仓库根目录会出现 `snapshots/snapshot_YYYYMMDD_HHMMSS.json`，同时（如果配了 Telegram）Bot 会收到一条推送消息。
+- 成功后，仓库的 **`snapshot` 分支** 会出现 `snapshots/snapshot_YYYYMMDD_HHMMSS.json`，同时（如果配了 Telegram）Bot 会收到一条推送消息。
+
+> 快照会被提交到独立的 `snapshot` 分支，**不会污染主分支**。
 
 ### 4. 之后就可以不管了
 
-定时触发会自动按计划跑，新快照会被 workflow 自动提交回仓库。
+定时触发会自动按计划跑，新快照会被 workflow 自动提交到 `snapshot` 分支。
 
 ## 项目结构
 
@@ -112,13 +114,24 @@ git push
 
 > 个人推送和群组推送都支持，只要把 `chat.id` 填进去即可。
 
-## 常见问题
+## 分支策略
+
+为了避免污染主分支，快照会被提交到独立的 **`snapshot` 分支**：
+
+- 首次运行时，workflow 会基于默认分支 HEAD 创建 `snapshot` 分支。
+- 之后所有定时/手动运行产生的快照都 append 到该分支。
+- 主分支只保留工作代码（`main.py`、`requirements.txt`、workflow 等），完全不会出现 `snapshots/` 目录的提交。
+
+你可以在仓库里切换到 `snapshot` 分支查看历史快照，默认分支不受影响。
 
 - **Q: 定时任务没跑？**
   A: `schedule` 只在默认分支生效，且 GitHub 对长时间不活跃的仓库可能暂停 schedule。手动 `Run workflow` 一次通常能恢复。另外 GitHub 对 cron 有少量延迟（几分钟），不是精确触发。
 
 - **Q: 快照没被提交回来？**
-  A: 检查 Workflow permissions 是否开启 `Read and write permissions`；确认 `ARK_API_KEY` 已填满。
+  A: 检查 Workflow permissions 是否开启 `Read and write permissions`（workflow 需要推送到 `snapshot` 分支）；确认 `ARK_API_KEY` 已填满；查看对应 workflow run 的日志中 "Commit and push snapshot to snapshot branch" 步骤。
+
+- **Q: `snapshot` 分支没有被创建？**
+  A: 首次运行会自动创建。如果是手动运行且创建失败，确认 `GITHUB_TOKEN` 有写权限（Workflow permissions = Read and write）。
 
 - **Q: 任务报错 `Missing required environment variable: ARK_API_KEY`？**
   A: Secret 名字必须**完全匹配**大小写，`ARK_API_KEY`，不是 `Ark_Api_Key` 也不是 `ARK_TOKEN`。

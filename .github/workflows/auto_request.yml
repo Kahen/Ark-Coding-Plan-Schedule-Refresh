@@ -14,12 +14,26 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Switch to snapshot branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Create the snapshot branch if it doesn't exist yet.
+          # It is based on the default branch so the snapshots/ dir keeps a single linear history.
+          if git ls-remote --exit-code --heads origin snapshot; then
+            git checkout snapshot
+          else
+            git checkout -b snapshot
+            # Seed it from the current default branch checkout (code is already at HEAD)
+          fi
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.10"
 
@@ -35,14 +49,14 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: python main.py
 
-      - name: Commit and push snapshot
+      - name: Commit and push snapshot to snapshot branch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add snapshots/
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
             git commit -m "chore: auto save API snapshot [skip ci]"
-            git push
+            # Best-effort fast-forward safeguard in case the branch advanced upstream
+            git pull --rebase origin snapshot || true
+            git push origin snapshot
           fi
