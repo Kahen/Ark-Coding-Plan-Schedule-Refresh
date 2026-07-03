@@ -5,7 +5,8 @@ on:
     # Beijing Time (UTC+8) -> UTC
     - cron: "0 22 * * *"   # 06:00 BJT
     - cron: "1 3 * * *"    # 11:01 BJT
-    - cron: "11 8 * * *"    # 16:02 BJT
+    - cron: "2 8 * * *"    # 16:02 BJT
+  workflow_dispatch:
 
 jobs:
   api-request:
