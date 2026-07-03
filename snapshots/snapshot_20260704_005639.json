@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-07-04T00:56:39.944378+08:00",
+  "success": true,
+  "request": {
+    "model": "doubao-seed-2.0-mini",
+    "max_tokens": 1024,
+    "stream": false,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  },
+  "response": {
+    "id": "021783097799224646a82c201206d75cd5c6526847a4fd91862a2",
+    "type": "message",
+    "role": "assistant",
+    "model": "doubao-seed-2.0-mini",
+    "content": [
+      {
+        "type": "text",
+        "text": "Hello! It's nice to hear from you. How can I help you today? 😊"
+      }
+    ],
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 46,
+      "output_tokens": 19,
+      "cache_read_input_tokens": 0
+    }
+  }
+}
