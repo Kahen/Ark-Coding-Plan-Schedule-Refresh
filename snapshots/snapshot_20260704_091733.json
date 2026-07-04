@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-07-04T09:17:33.142373+08:00",
+  "success": true,
+  "request": {
+    "model": "doubao-seed-2.0-mini",
+    "max_tokens": 1024,
+    "stream": false,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  },
+  "response": {
+    "id": "0217831278522102866bb6cb6b56020dddc7afb20a439958fdd32",
+    "type": "message",
+    "role": "assistant",
+    "model": "doubao-seed-2.0-mini",
+    "content": [
+      {
+        "type": "text",
+        "text": "Hello! It's nice to meet you. Whether you have questions you want to ask, want to chat about something interesting, or need help with a task, feel free to let me know."
+      }
+    ],
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 46,
+      "output_tokens": 39,
+      "cache_read_input_tokens": 0
+    }
+  }
+}
